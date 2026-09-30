@@ -1,0 +1,25 @@
+# AI tooling: local only, never published (TECH-STACK §7)
+CLAUDE.md
+.claude/
+.cursor/
+.cursorrules
+
+# Python environments, caches and coverage reports
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Operating-system files
+Thumbs.db
+desktop.ini
+.DS_Store
