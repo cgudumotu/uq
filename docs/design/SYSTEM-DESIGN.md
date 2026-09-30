@@ -90,6 +90,11 @@ CalibrationReport(n, levels, delivered, plausible_ranges, verdicts, mean_widths,
 `total_std` is a separate, shorter flow: validate `(S, n)` pair → `sqrt(noise_vars.mean(0) +
 means.var(0))` (population variance, P-01) → `(n,)`.
 
+*Added with P-09:* `compare.py` sits beside `report.py`: for every model it calls `evaluate`
+and the per-point NLL kernel, sorts the total-uncertainty models by NLL, computes the paired
+difference between the top two (mean and standard error over the n points), and renders the
+two-section table. It imports `report`, `metrics` and `_validate` only.
+
 ### 2.3 API contracts
 
 Exactly MISSION §6, as amended 2026-09-30 (amendment 7). Repeated here only to fix the types:

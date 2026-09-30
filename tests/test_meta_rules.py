@@ -13,7 +13,11 @@ MISSION = TESTS.parent / "docs" / "constitution" / "MISSION.md"
 # M1 scope (MISSION section 8): every MATH and API rule. DATA-1, DATA-2 and DATA-5 join on
 # 2026-10-03 with reproduce/data.py (HANDOFF "Acceptance tests"); REPRO and MODEL rules are
 # tested by reproduce/ (M1, Oct 3) and models/ (M2).
-M1_RULES = {f"MATH-{i}" for i in range(1, 9)} | {f"API-{i}" for i in range(1, 7)}
+M1_RULES = (
+    {f"MATH-{i}" for i in range(1, 9)}
+    | {f"API-{i}" for i in range(1, 7)}
+    | {"MODEL-3", "MODEL-5"}  # `compare` implements MODEL-5a and MODEL-3 in the core (P-09)
+)
 MARKER = re.compile(r"""pytest\.mark\.rule\(\s*["']([A-Z]+-\d+)["']\s*\)""")
 HEADING = re.compile(r"\*\*((?:MATH|DATA|REPRO|API|MODEL)-\d+)\b")
 

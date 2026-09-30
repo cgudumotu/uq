@@ -102,6 +102,40 @@ report = uqc.evaluate(y_test, mean, std)
 Standard deviations are never added, and a square root is never taken of a standard deviation.
 This package exists because a published thesis did both (see below).
 
+## Comparing models
+
+Several models, one test set: `compare` scores each with `evaluate`, ranks the ones that report
+total uncertainty by their surprise score (never by coverage alone), and only names a winner
+when the lead is bigger than its own margin of error. Models without a noise term (plain
+Monte Carlo dropout, a Bayesian network without a variance output) go in `epistemic_only`: they
+are shown, but not ranked against models that report total uncertainty.
+
+```python
+result = uqc.compare(
+    y_test,
+    {"deep ensemble": (mean_a, s_a * std_a), "single network": (mean_b, s_b * std_b)},
+    epistemic_only={"MC dropout": (mean_c, std_c)},
+)
+print(result)
+print(result.best)   # a name, or None when the top two are too close to call
+```
+
+```
+uqcalibrate: 3 models ranked, 1 epistemic-only, 60 points
+rank  model                               95% delivered  mean width      NLL  verdict
+   1  deep operator neural network                95.0%        4.52     1.55  CONSISTENT
+   2  deep ensemble neural network                95.0%        5.03     1.55  CONSISTENT
+   3  simple neural network                       73.3%        2.51     2.19  OVERCONFIDENT
+Too close to call: the top two differ by 0.00 +/- 0.02 NLL per point.
+
+Epistemic only (bands hold no noise term; not ranked)
+   -  Monte Carlo dropout neural network          48.3%        1.76     3.69  OVERCONFIDENT
+```
+
+That output is real (60 seeded points; the top two models differ only by a 0.9 factor on the
+std, which 60 points cannot tell apart). Apply each model's own `fit_scaling` factor before
+comparing, and compare on data no factor was fitted on.
+
 ## Many input features
 
 The functions above never see your inputs `X`, so a model with 3 features or 300 works the same
@@ -123,6 +157,7 @@ command.
 |---|---|---|
 | `evaluate(y, mean, std, levels=(0.5, 0.8, 0.9, 0.95))` | `CalibrationReport` | MATH-4, MATH-7 |
 | `fit_scaling(y, mean, std)` | `float` factor, > 0 | MATH-8 |
+| `compare(y, predictions, epistemic_only=None, levels=...)` | `ModelComparison` | MODEL-5a, MODEL-3 |
 | `total_std(means, noise_vars)` | `ndarray (n,)` | MATH-1 |
 | `coverage(y, mean, std, level=0.95)` | `float` in [0, 1] | MATH-3 |
 | `gaussian_nll(y, mean, std)` | `float` | MATH-5 |
@@ -132,8 +167,8 @@ Every rule is written out in [docs/constitution/MISSION.md](docs/constitution/MI
 every rule has a test that names it.
 
 Coming in the next release: `uqcalibrate[torch]`, with the five neural-network architectures from
-the thesis and `train_and_compare(X, y)`, which trains them, calibrates them and ranks the ones
-that report total uncertainty.
+the thesis and `train_and_compare(X, y)`, which trains them, calibrates each on a held-out split
+and hands the results to `compare`.
 
 ## License
 

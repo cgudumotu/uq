@@ -72,6 +72,7 @@ reproduce; each one is listed in ERRATA.md.
 | `evaluate` | `(y, mean, std, levels=(0.5, 0.8, 0.9, 0.95))` | `CalibrationReport` | raises `NotImplementedError` if 0.95 is not in `levels` (Q-1) | MATH-4, MATH-7 |
 | `fit_scaling` | `(y, mean, std)` | `float` > 0 | validates, then raises `NotImplementedError` naming MATH-8 until P-04 is decided; all-zero residuals raise `ValueError` first | MATH-8 |
 | `CalibrationReport` | frozen dataclass | — | `str()` per UX-COPY.md; `to_dict()` | §6 |
+| `compare` *(added with P-09)* | `(y, predictions, epistemic_only=None, levels=...)` | `ModelComparison` | ranks by NLL; `best` is `None` when the lead is within 2 SE; needs n ≥ 2 | MODEL-5a, MODEL-3, MATH-4 |
 
 Every function: converts inputs with `np.asarray(..., dtype=float)`, validates per API-2, and
 draws no random numbers (API-4).
@@ -131,6 +132,7 @@ input fails in `np.asarray` and is reported as non-finite or non-convertible by 
 | API-4 | `test_api4_pure_no_print_no_random` (captures stdout; same inputs, same outputs; global RNG state unchanged) | property |
 | API-5 | `test_api5_imports_without_torch` (imports `uqcalibrate` with `torch` blocked in `sys.modules`), `test_api5_core_imports_only_numpy_and_stdlib` (AST scan of `src/`) | boundary |
 | API-6 | `test_api6_no_abbreviations_in_core_strings` (no "DONN"/"SNN"/... in `src/` strings) | boundary |
+| MODEL-5, MODEL-3 *(added with P-09)* | `test_model5a_orders_by_nll_after_scaling`, `test_model5a_never_ranks_by_coverage_alone`, `test_model5a_identical_models_are_too_close_to_call`, `test_model5a_paired_lead_known_answer` (log 2, SE 0), `test_model5a_epistemic_only_listed_separately_and_never_best`, table, `to_dict`, purity, messages | known-answer, property, boundary |
 | G5 | `test_meta_every_in_force_rule_has_a_test` (parses MISSION.md rule IDs in force for M1, compares with markers) | meta |
 
 DATA-1, DATA-2 and DATA-5 get their tests with the corrected generator on Oct 3 (they need
@@ -145,14 +147,18 @@ says why.
   identical rows would print the same verdict twice and `to_dict()` would carry a redundant key.
 - **D-3** The Wilson interval's confidence is fixed at 95% and not a parameter: MATH-7 names
   one interval, and a knob would invite tuning the verdict.
-- **D-4** `fit_scaling` runs the full API-2 validation and the all-zero-residuals check before
-  raising `NotImplementedError`, so the in-force clauses of MATH-8 are tested today.
+- **D-4** `fit_scaling` ran the full API-2 validation and the all-zero-residuals check before
+  raising `NotImplementedError`; superseded when P-04 was decided (the formula is in).
+- **D-5** *(P-09)* The ranking rule lives in the core as `compare`, not in the PyTorch extra,
+  because it needs no PyTorch and serves users who bring several models' predictions;
+  `train_and_compare` (M2) calls it, so the rule exists once.
 
 ## Open questions
 
 - **Q-1 (MATH-7, needed before release).** Headline when `levels` does not include 0.95:
   raise (current), use the highest requested level, or require 0.95 always?
-- **Q-2 (P-04 to P-09).** Pending register decisions; P-04, P-05, P-07, P-08 gate M1.
+- **Q-2 (P-05 to P-08).** Pending register decisions for the erratum track (P-04 and P-09 were
+  decided on 2026-09-30); P-05, P-07, P-08 gate the DONN reproduction, not the package.
 - **Q-3 (MODEL-3, M2 ADR).** How σ is formed for a model whose `noise_vars` is `None`:
   `total_std(means, None)` treating the noise term as zero and labeling the model, or the
   evaluation layer passing zeros. The M1 signature is unchanged either way.

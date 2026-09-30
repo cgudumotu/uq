@@ -30,14 +30,20 @@ def _inside(y: np.ndarray, lower: np.ndarray, upper: np.ndarray) -> np.ndarray:
     return (lower <= y) & (y <= upper)
 
 
-def _nll(y: np.ndarray, mean: np.ndarray, std: np.ndarray) -> float:
-    """Full Gaussian negative log-likelihood, averaged over points (MATH-5, ADR-0005).
+def _nll_points(y: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+    """Full Gaussian negative log-likelihood of every point (MATH-5, ADR-0005).
 
     Computed as half*log(2*pi) + log(std) + half*z**2 with z = (y - mean) / std, which equals
-    half*log(2*pi*std**2) + (y - mean)**2 / (2*std**2) without ever squaring std.
+    half*log(2*pi*std**2) + (y - mean)**2 / (2*std**2) without ever squaring std. `compare`
+    uses the per-point values for its paired test (MODEL-5a); `_nll` averages them.
     """
     z = (y - mean) / std
-    return float(np.mean(HALF_LOG_2PI + np.log(std) + 0.5 * z * z))
+    return HALF_LOG_2PI + np.log(std) + 0.5 * z * z
+
+
+def _nll(y: np.ndarray, mean: np.ndarray, std: np.ndarray) -> float:
+    """Full Gaussian negative log-likelihood, averaged over points (MATH-5)."""
+    return float(np.mean(_nll_points(y, mean, std)))
 
 
 def _interval_score(y: np.ndarray, lower: np.ndarray, upper: np.ndarray, alpha: float) -> float:

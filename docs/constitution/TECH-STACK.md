@@ -36,6 +36,7 @@ uq/
     combine.py        total_std: the only place total variance is computed (MATH-1)
     metrics.py        coverage, gaussian_nll, interval_score (MATH-3, 5, 6)
     calibration.py    fit_scaling (MATH-8)
+    compare.py        compare and ModelComparison: ranks models (MODEL-5a, MODEL-3)
     report.py         evaluate and CalibrationReport: composes metrics, explains (MATH-4, 7)
     models/           M2 only, PyTorch extra (MODEL-1..4)
   tests/
@@ -55,6 +56,7 @@ uq/
 __init__ ─► report ──────► metrics ─► _normal
     │          ├─────────► _normal        │
     │          └─────────► _validate ◄────┘
+    ├──────► compare ─────► report, metrics, _validate
     ├──────► metrics   (public wrappers)
     ├──────► combine ─────► _validate
     └──────► calibration ─► _validate
@@ -163,3 +165,6 @@ default pytest suite on Python 3.10–3.14, on ubuntu-latest and windows-latest.
   `combine`); import rules 4 and 5 state the underscore convention and the kernel rule. §5: the
   pytest configuration (registered markers, warnings as errors). §8: the version is written once
   in `__init__.py`.
+- **2026-09-30, amendment 3 (P-09).** §3: `compare.py` added to the core layout and the
+  dependency diagram; it imports `report`, `metrics` and `_validate` and, like every core
+  module, nothing outside NumPy and the standard library.

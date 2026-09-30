@@ -116,6 +116,7 @@ not catch it: wider bands always catch more points.
 | `interval_score` | `interval_score(y, mean, std, level=0.95)` | float | MATH-2, MATH-6 |
 | `evaluate` | `evaluate(y, mean, std, levels=(0.5, 0.8, 0.9, 0.95))` | `CalibrationReport` | MATH-4, MATH-7 |
 | `fit_scaling` | `fit_scaling(y, mean, std)` | float > 0 | MATH-8 |
+| `compare` | `compare(y, predictions, epistemic_only=None, levels=(0.5, 0.8, 0.9, 0.95))` | `ModelComparison` | MATH-4, MODEL-3, MODEL-5a |
 
 **Shapes.** `means` and `noise_vars` have shape (S, n): S ≥ 1 samples or ensemble members on axis
 0, n points on axis 1. For a single network, S = 1. `y` and `mean` have shape (n,). `std` has
@@ -156,25 +157,38 @@ s = uqc.fit_scaling(y_cal, mean_cal, std_cal)  # held-out calibration split
 report = uqc.evaluate(y_test, mean_test, s * std_test)  # confirms the fix
 ```
 
-**Planned for M2 (not public in M1):** `compare(...)` over fitted models that follow MODEL-1, and
-`uqcalibrate.models.train_and_compare(X, y, ...)` returning a `ModelComparison` (MODEL-5; names
-pending Phase 1 step 2). Both live in the PyTorch extra. The M1 surface does not change.
+**`compare` and `ModelComparison`** *(added by amendment 9, P-09)*. `predictions` maps a model
+name to its `(mean, std)` on the test data, after any factor from `fit_scaling` has been applied;
+these models report total uncertainty and are ranked. `epistemic_only` maps names to `(mean, std)`
+for models whose bands hold no noise term; they are shown in their own section and never ranked
+(MODEL-3). `ModelComparison` is immutable, with fields `n`, `names` (ranked, best first),
+`reports` (one `CalibrationReport` per ranked model), `best` (a name, or `None` when the top two
+are too close to call), `runner_up`, `lead`, `lead_se` (the leader's mean per-point NLL advantage
+over the runner-up and its standard error), `epistemic_only_names`, `epistemic_only_reports`,
+`headline`; `str()` renders the table below (ASCII, at most 100 columns with the thesis names);
+`to_dict()` returns plain Python types.
 
-Illustrative `ModelComparison` (numbers invented; wording is set in Phase 1 step 2; model names
-follow API-6):
+Output of `compare` (a real run: 60 seeded points, three models at 0.5, 0.9 and 1.0 times the
+true spread, one epistemic-only model at 0.35):
 
 ```
-uqcalibrate: 5 models trained on 180 points, calibrated on 60, scored on 60
-Ranked (total uncertainty)             95% delivered   width   NLL    verdict
-  1. deep ensemble neural network          94.5%        1.02   0.41   CONSISTENT
-  2. deep operator neural network          93.0%        1.10   0.47   CONSISTENT
-  3. simple neural network                 88.0%        0.85   0.62   OVERCONFIDENT
-Best: deep ensemble neural network (leads by 0.06 ± 0.02 NLL per point)
+uqcalibrate: 3 models ranked, 1 epistemic-only, 60 points
+rank  model                               95% delivered  mean width      NLL  verdict
+   1  deep operator neural network                95.0%        4.52     1.55  CONSISTENT
+   2  deep ensemble neural network                95.0%        5.03     1.55  CONSISTENT
+   3  simple neural network                       73.3%        2.51     2.19  OVERCONFIDENT
+Too close to call: the top two differ by 0.00 +/- 0.02 NLL per point.
 
 Epistemic only (bands hold no noise term; not ranked)
-     Monte Carlo dropout neural network    61.0%        0.44   1.35   OVERCONFIDENT
-     Bayesian neural network               58.5%        0.40   1.42   OVERCONFIDENT
+   -  Monte Carlo dropout neural network          48.3%        1.76     3.69  OVERCONFIDENT
 ```
+
+The other headline reads `Best: <name> (leads the runner-up by 0.06 +/- 0.02 NLL per point).`;
+with one ranked model, `Best: <name> (the only model ranked).`
+
+**Planned for M2 (not public in M1):** `uqcalibrate.models.train_and_compare(X, y, ...)`, which
+trains the five thesis models and calls `compare` (MODEL-5), printing the same table with its own
+first line about the split. It lives in the PyTorch extra. The M1 surface does not change.
 
 ---
 
@@ -285,9 +299,9 @@ docs/design/UX-COPY.md.
   extreme. Wilson known answer: k = 183 of n = 200 gives [0.868, 0.946] to three decimals, so the
   verdict at 95% is OVERCONFIDENT; k = 186 gives [0.886, 0.958], CONSISTENT.
 
-**MATH-8 Variance scaling.** **⏸ PENDING CAROL'S REVIEW (objective)**
+**MATH-8 Variance scaling.** *(objective decided by Carol, 2026-09-30: P-04)*
 `fit_scaling(y, mean, std)` returns one factor s > 0, fitted on held-out calibration data and
-applied as `std_new = s · std`. Proposal:
+applied as `std_new = s · std`:
 
 ```
 s = √( (1/n) · Σ_i ((y[i] − μ[i]) / σ[i])² )
@@ -295,14 +309,17 @@ s = √( (1/n) · Σ_i ((y[i] − μ[i]) / σ[i])² )
 
 This is the closed-form minimizer of the Gaussian NLL over s: no optimizer, no randomness. It is
 the dataset-level form of the NLL's "confession" property: the fitted spread equals the observed
-spread of standardized errors. Alternative (b): match coverage exactly at one chosen level,
-s = quantile_p(|z|) / z_p. It is exact at that level on calibration data and ignores the others.
-- **In force regardless of the choice.** s is fitted on data disjoint from the data it is
-  evaluated on. The function cannot detect reuse, so the docstring and every README example show
-  a split. If all residuals are zero, it raises ValueError.
-- **Acceptance.** For an oracle whose std is multiplied by 0.5, `fit_scaling` returns ≈ 2 on a
-  large seeded calibration split, and `evaluate` on a separate test split is then CONSISTENT at
-  all four levels.
+spread of standardized errors, so after scaling the standardized residuals have a root-mean-square
+of exactly 1 on the calibration data. *Rejected alternative:* match coverage exactly at one chosen
+level, s = quantile_p(|z|) / z_p, which is exact at that level and ignores the others.
+- s is fitted on data disjoint from the data it is evaluated on. The function cannot detect
+  reuse, so the docstring and every README example show a split. If all residuals are zero, it
+  raises ValueError.
+- **Acceptance.** Known answers: residuals exactly twice the std give s = 2; residuals 3 and 4
+  with σ = 1 give √12.5. After scaling, the standardized residuals have RMS 1 (to 1e-12), and no
+  other factor gives a lower NLL on the calibration data. For an oracle whose std is multiplied
+  by 0.5, `fit_scaling` returns ≈ 2 on a large seeded calibration split, and `evaluate` on a
+  separate test split is then CONSISTENT at all four levels.
 
 ### DATA: how benchmark data is generated
 
@@ -418,8 +435,9 @@ flagged "PDF only".
 
 ### API: how the public surface behaves
 
-**API-1 Fixed public surface.** The M1 public names are the six functions in §6 plus
-`CalibrationReport`. Everything else is private (leading underscore). After this document is
+**API-1 Fixed public surface.** The M1 public names are the seven functions in §6 plus
+`CalibrationReport` and `ModelComparison` (nine names). Everything else is private (leading
+underscore). After this document is
 approved, changing a public name, signature, default, return type or error type needs Carol's
 approval.
 
@@ -482,17 +500,24 @@ report or compare.
 60/20/20; the caller may pass its own parts), each part with its own random stream (DATA-1,
 DATA-5); (ii) trains each model on the training part only; (iii) fits each model's scaling factor
 on the calibration part (MATH-8) and applies it; (iv) evaluates every model on the test part with
-`evaluate` (MATH-4, MATH-7); (v) returns a `ModelComparison` holding every fitted model, one
-table, and `.best`. The function orchestrates: it computes no metric itself, and every σ comes
-from `total_std` (MODEL-2). Defaults are the thesis hyperparameters; every one can be overridden.
-- **⏸ PENDING CAROL'S REVIEW, clause 5a (ranking rule).** Proposal: models are ordered by NLL on
-  the test part after scaling, with coverage at every level, width and the interval score shown
-  beside it (MATH-4). The leader is named "best" only when its per-point NLL beats the runner-up's
-  by more than two standard errors of the paired difference; otherwise the table says "too close
-  to call" between them. Epistemic-only models are listed in a separate section (MODEL-3).
-- **Acceptance (once decided).** On a seeded problem where one model is made deliberately
-  overconfident, it never ranks first. A model with σ × 1000 never ranks first despite near-100%
-  coverage. Two copies of the same model give "too close to call".
+`evaluate` (MATH-4, MATH-7) through the core function `compare`; (v) returns the
+`ModelComparison` from `compare`, plus the fitted models. The function orchestrates: it computes
+no metric itself, and every σ comes from `total_std` (MODEL-2). Defaults are the thesis
+hyperparameters; every one can be overridden.
+- **Clause 5a (ranking rule).** *(decided by Carol, 2026-09-30: P-09; implemented once, in the
+  core function `compare`, which `train_and_compare` calls)* Models that report total uncertainty
+  are ordered by NLL on the test part after scaling, with coverage and mean width at 95% shown
+  beside it and the full `evaluate` report kept for every model (MATH-4). The leader is named
+  "best" only when its per-point NLL beats the runner-up's by more than two standard errors of
+  the paired difference (mean and standard error of the per-point differences over the n test
+  points); otherwise the headline says the top two are too close to call. Epistemic-only models
+  are listed in a separate section and are never best (MODEL-3). `compare` needs n ≥ 2 points, so
+  the standard error exists.
+- **Acceptance.** A model made deliberately overconfident never ranks first. A model with
+  σ × 1000 never ranks first despite 100% coverage. Two copies of the same model give "too close
+  to call" with a lead of exactly 0. Known answer: two models at the truth with σ = 1 and σ = 2
+  differ by exactly log 2 per point with zero standard error, so the σ = 1 model is best. An
+  epistemic-only model with the best NLL of all is still not best and not in `names`.
 
 **MODEL-6 Thesis architectures, unchanged (M2).** *(decided by Carol, 2026-09-30; ADR-0002)*
 The five built-in models keep the thesis architectures. The Bayesian network and MC dropout
@@ -516,6 +541,8 @@ the M2 architecture ADR; the M1 signature of `total_std` does not change.
       formula.
 - [ ] The oracle test (MATH-3) reaches nominal coverage at 50, 80, 90 and 95%.
 - [ ] `evaluate` → `fit_scaling` → `evaluate` runs end to end on a seeded example (MATH-8).
+- [ ] `compare` ranks three models correctly and lists an epistemic-only model separately
+      (MODEL-5a, MODEL-3).
 - [ ] REPRO-1: one command regenerates the M1 tables (DONN published and corrected).
 - [ ] REPRO-2 (as decided) passes or reports every gap; REPRO-3 and REPRO-5 tests pass.
 - [ ] Importing `uqcalibrate` succeeds with PyTorch unavailable (API-5).
@@ -528,12 +555,12 @@ the M2 architecture ADR; the M1 signature of `total_std` does not change.
 | P-01 | MATH-1a: divisor of the epistemic term | **Decided 2026-09-30:** 1/S (`ddof=0`) |
 | P-02 | MATH-5a: include ½·log 2π in the NLL | **Decided 2026-09-30:** yes (full NLL) |
 | P-03 | MATH-7: verdict rule | **Decided 2026-09-30:** Wilson interval per level; headline at 95% |
-| P-04 | MATH-8: scaling objective | Closed-form NLL minimizer |
+| P-04 | MATH-8: scaling objective | **Decided 2026-09-30:** closed-form NLL minimizer |
 | P-05 | DATA-3: corrected 1-D noise law | σ(x) = \|7 − \|x\|\| / 16 for every x |
 | P-06 | DATA-4: corrected Ishigami design (M2; the Table 34 notebook is lost) | Printed design, minus the sorting |
 | P-07 | REPRO-2: agreement tolerance | Split: 2a exact ±0.05, every published table; 2b within 3 standard errors, DONN only |
 | P-08 | REPRO-5c: extract notebook outputs before stripping | Yes |
-| P-09 | MODEL-5a: ranking rule for `train_and_compare` (M2) | NLL after scaling, MATH-4 columns beside it, paired test for "too close to call" |
+| P-09 | MODEL-5a: ranking rule for `train_and_compare` (M2) | **Decided 2026-09-30:** NLL after scaling, MATH-4 columns beside it, paired test for "too close to call"; implemented in the core `compare` |
 | P-10 | MODEL-6: noise heads so all five models are comparable (M2) | **Decided 2026-09-30:** no. Thesis architectures kept; three models ranked, two shown as epistemic-only (ADR-0002) |
 
 ## 10. Amendment log
@@ -584,3 +611,10 @@ the M2 architecture ADR; the M1 signature of `total_std` does not change.
   fields `mean_width` and `interval_score` renamed `mean_widths` and `interval_scores`: they
   hold one value per level, like their plural neighbours. The function `interval_score` keeps
   its name (it returns one number). Awaiting Carol's veto; no MATH rule changed.
+- **2026-09-30, amendment 9.** Carol decided P-04 and P-09 as recommended ("let us code P-04 and
+  P-09 now"). MATH-8's objective is in force (the closed-form NLL minimizer) with known answers
+  added to its acceptance list. MODEL-5a is in force and, because the ranking rule needs no
+  PyTorch, it is implemented once in the core as the public function `compare` returning
+  `ModelComparison`; `train_and_compare` (M2) will call it. §6 gains the `compare` row, the
+  `ModelComparison` fields and a real example; API-1 now names nine public names; §8 gains a
+  `compare` item. MATH rules unchanged except MATH-8's decided clause.

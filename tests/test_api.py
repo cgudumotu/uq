@@ -19,6 +19,8 @@ from conftest import honest_predictions
 SRC = Path(uqc.__file__).resolve().parent
 PUBLIC = {
     "CalibrationReport",
+    "ModelComparison",
+    "compare",
     "coverage",
     "evaluate",
     "fit_scaling",
@@ -172,13 +174,9 @@ def test_api2_std_shape_message():
 
 @pytest.mark.rule("API-2")
 def test_api2_pending_messages(honest):
+    # The one pending path left in the core (MATH-7, HANDOFF Q-1). P-04 was decided, so
+    # fit_scaling no longer raises NotImplementedError.
     y, mean, std = honest
-    with pytest.raises(NotImplementedError) as err:
-        uqc.fit_scaling(y, mean, std)
-    assert str(err.value) == (
-        "fit_scaling is not available yet: the scaling objective (MISSION MATH-8, decision P-04) "
-        "is under review. See docs/constitution/MISSION.md, section 9."
-    )
     with pytest.raises(NotImplementedError) as err:
         uqc.evaluate(y, mean, std, levels=(0.9,))
     assert str(err.value) == (
@@ -224,6 +222,7 @@ def test_api3_parameter_names_carry_units():
     assert names(uqc.interval_score) == ["y", "mean", "std", "level"]
     assert names(uqc.evaluate) == ["y", "mean", "std", "levels"]
     assert names(uqc.fit_scaling) == ["y", "mean", "std"]
+    assert names(uqc.compare) == ["y", "predictions", "epistemic_only", "levels"]
     # Nothing in the public surface is called `var` while holding a standard deviation.
     assert inspect.signature(uqc.coverage).parameters["level"].default == 0.95
     assert inspect.signature(uqc.evaluate).parameters["levels"].default == (0.5, 0.8, 0.9, 0.95)

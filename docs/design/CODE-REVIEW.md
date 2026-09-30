@@ -57,6 +57,24 @@ Also considered and left as is:
 - The report renders identically on every platform: ASCII only, 79 columns, verified by test.
 - The docstring examples run as tests (`--doctest-modules`), so the documentation cannot drift.
 
+## Addendum: P-04 and P-09 (2026-09-30, later the same day)
+
+- `calibration.py`: the pending line became `float(np.sqrt(np.mean(residuals * residuals)))`.
+  Checked against MATH-8 symbol by symbol; the all-zero refusal precedes it, so a division by a
+  zero mean cannot occur. Known answers 2 and √12.5, the unit-RMS property and the "no other
+  factor scores lower" property are tested.
+- `metrics.py`: `_nll` now averages a new per-point kernel `_nll_points`; the MATH-5 tests
+  (constant, residual known answer, two forms agree) are unchanged and still pass.
+- `compare.py`: reviewed for the rule text of MODEL-5a. Sorting is Python's stable sort on
+  `report.nll`, so ties keep the caller's order. The paired standard error uses `ddof=1` over
+  n ≥ 2 points (validated). `best` is set only when `lead > 2 * lead_se`, so a lead of exactly
+  zero with zero standard error is "too close to call" (two identical models). Epistemic-only
+  models are scored with the same `evaluate` but never enter `names`, so they cannot become
+  `best`. One simplification made during review: `n` is read from the first report instead of
+  being recomputed from the arrays.
+- Validation messages follow the UX-COPY addendum; one test per message. 100% coverage holds
+  (326 statements).
+
 ## Verdict
 
 **Approve for Carol's line-by-line review.** Nothing is committed; Carol commits from Cursor.

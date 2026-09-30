@@ -22,13 +22,14 @@ line. Each day's plan assumes the previous day's review is complete.
 | Thu 10-01 | M0 done | Carol's line-by-line review of the core; P-04, P-05, P-07, P-08 decided; constitution v1 approved; `fit_scaling` formula lands (P-04) |
 | Fri 10-02 | M1 | Review fixes; evidence manifest and provenance extraction start early |
 | Sat 10-03 | M1 done | Evidence manifest, provenance extraction, stripped copies; DONN port; correction ladder; ERRATA E-1 numbers for approval |
-| Sun 10-04 | M2 | Models (PyTorch extra); P-06, P-09 decided |
+| Sun 10-04 | M2 | Models (PyTorch extra); P-06 decided |
 | Mon 10-05 | M2 | Corrected reruns of Tables 1–34 and figures; `compare()`; `train_and_compare()` |
 | Tue 10-06 | M2 done | ERRATA complete for approval; CHANGELOG; 0.1.0 on TestPyPI (approval) |
 | Wed 10-07 | Buffer | PyPI upload (approval); first item to slip |
 
-**Critical path.** P-01 to P-05, P-07 and P-08 gate M1, so they are needed on 10-01. P-06 and
-P-09 gate M2 only, so they can wait until 10-04. P-10 is decided (ADR-0002). Carol's TestPyPI and PyPI accounts exist
+**Critical path.** The package track no longer waits on any decision: P-01 to P-04, P-09 and
+P-10 are decided. P-05, P-07 and P-08 gate the DONN reproduction (erratum track); P-06 gates the
+Ishigami rerun; all four can wait until the day that work starts. Carol's TestPyPI and PyPI accounts exist
 (2026-09-30), so the uploads wait only on her approval.
 
 ---
@@ -43,8 +44,8 @@ P-09 gate M2 only, so they can wait until 10-04. P-10 is decided (ADR-0002). Car
   deadline and slip order (above); no other copies of the notebooks (MISSION DATA-4).
 - ✅ Local CLAUDE.md and `.gitignore` (TECH-STACK §7).
 - 🔄 ERRATA.md drafted, numbers PENDING (REPRO-1, REPRO-2).
-- ✅ P-01, P-02, P-03 decided (2026-09-30, as recommended); P-10 decided (ADR-0002).
-  ⏸ P-04 to P-09 (MISSION §9); P-04, P-05, P-07, P-08 gate M1.
+- ✅ P-01, P-02, P-03, P-04, P-09 decided (2026-09-30, as recommended); P-10 decided (ADR-0002).
+  ⏸ P-05 to P-08 (MISSION §9): the erratum track; none of them gates the package.
 - ✅ Design critique and UX copy (docs/design/CRITIQUE.md, UX-COPY.md); MISSION amendments 7
   and 8 (report wording, `plausible_ranges`, plural field names).
 - ✅ docs/design/HANDOFF.md: migration map, acceptance tests, decisions D-1 to D-4, open
@@ -62,7 +63,8 @@ copies are byte-identical, so one is used), Thesis_PyPi/UQ_DNN_Thesis.pdf.
   (TECH-STACK §2, §9). 2026-09-30. ⏸ Carol: the author line in pyproject and LICENSE.
 - ✅ Core, tests first (MATH-1 to MATH-8, API-1 to API-6): 88 tests, seen failing first, then
   green at 100% line coverage (docs/design/TEST-LOG.md, CODE-REVIEW.md). 2026-09-30.
-  `fit_scaling` raises `NotImplementedError` until P-04; its acceptance test is `xfail(strict)`.
+  P-04 landed the same day: `fit_scaling` is complete. P-09 landed as the core function
+  `compare` (MODEL-5a): 105 tests, 100% coverage.
 - ✅ README v1 draft with a real example report. 2026-09-30. ⏸ Carol's line-by-line review of
   everything above.
 - 📋 Evidence manifest, provenance extraction, stripped legacy copies (REPRO-5). 10-03.
@@ -83,8 +85,8 @@ copies are byte-identical, so one is used), Thesis_PyPi/UQ_DNN_Thesis.pdf.
   the thesis architectures unchanged (MODEL-6, ADR-0002). Open design questions go to ADRs: the
   Bayesian network implemented in-house or via blitz; how σ is formed for a model whose
   `noise_vars` is `None`. 10-04.
-- 📋 `compare()` (MATH-4, MODEL-3). 10-05.
-- 📋 `train_and_compare()` and `ModelComparison` (MODEL-5, MODEL-6; G6). ⏸ P-09. 10-05.
+- ✅ `compare()` and `ModelComparison` in the core (MATH-4, MODEL-3, MODEL-5a; P-09). 2026-09-30.
+- 📋 `train_and_compare()` (MODEL-5, MODEL-6; G6): trains, scales, then calls `compare`. 10-05.
   Adds about half a day to M2; the PyPI upload remains the item that slips first.
 - 📋 Corrected reruns of Tables 1–34 and the figures (REPRO-1). The published computation is
   re-run for the DONN only (REPRO-3, ADR-0001). ⏸ P-06 (DATA-4) for Table 34, whose notebook is
@@ -139,3 +141,6 @@ ADRs live in docs/decisions/.
   question added to the M2 ADR list.
 - **2026-09-30, amendment 6.** Model names fixed by MISSION API-6; "a descriptive name for the
   DONN" removed from the M2 ADR list.
+- **2026-09-30, amendment 7.** P-04 and P-09 decided and built (MISSION amendment 9);
+  `compare` moved from M2 to the delivered core; the critical path reworded: the package track
+  waits on no decision, the erratum track on P-05 to P-08.

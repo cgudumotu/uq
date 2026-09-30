@@ -1,8 +1,8 @@
-"""Fix a band that is off by a constant factor (MISSION MATH-8).
+"""Fix a band that is off by a constant factor (MISSION MATH-8; objective decided by P-04).
 
-The objective that chooses the factor is pending Carol's decision (P-04). Everything else in
-MATH-8 is in force and implemented: validation, the refusal when no factor can exist, and the
-contract that the factor is fitted on data disjoint from the data it is evaluated on.
+The factor is the root-mean-square of the standardized residuals, which is the closed-form
+minimizer of the Gaussian negative log-likelihood over a single scale: no optimizer, no
+randomness. It is fitted on data disjoint from the data it is evaluated on.
 """
 
 from __future__ import annotations
@@ -14,6 +14,12 @@ from . import _validate
 
 def fit_scaling(y: object, mean: object, std: object) -> float:
     """One factor `s` such that `s * std` is calibrated on held-out data (MATH-8).
+
+    `s = sqrt(mean(((y - mean) / std) ** 2))`: the root-mean-square of the standardized
+    residuals. For honest bands these residuals have a spread of 1; if their spread is 2, the
+    bands are half as wide as they should be and `s` is 2. This is the factor that minimizes
+    the Gaussian negative log-likelihood, and after applying it the standardized residuals
+    have a root-mean-square of exactly 1 on the calibration data.
 
     Fit it on a calibration split the model was not trained on and will not be evaluated on,
     then apply it as `std_new = s * std` everywhere, including on new data. The function cannot
@@ -35,13 +41,13 @@ def fit_scaling(y: object, mean: object, std: object) -> float:
     ValueError
         If the inputs fail validation, or if every residual `y - mean` is zero, because then no
         positive finite factor exists (edge case E-d).
-    NotImplementedError
-        Until the scaling objective is decided (MISSION section 9, P-04).
 
     Examples
     --------
-    >>> s = fit_scaling(y_cal, mean_cal, std_cal)   # doctest: +SKIP
-    >>> report = evaluate(y_test, mean_test, s * std_test)   # doctest: +SKIP
+    Every residual is twice the reported std, so the factor is 2:
+
+    >>> fit_scaling([2.0, -4.0], [0.0, 0.0], [1.0, 2.0])
+    2.0
     """
     y_arr, mean_arr, std_arr = _validate.prediction_inputs(y, mean, std)
     residuals = (y_arr - mean_arr) / std_arr
@@ -50,7 +56,4 @@ def fit_scaling(y: object, mean: object, std: object) -> float:
             "residuals are all zero: every y equals its mean, so no positive finite scaling "
             "factor exists. Fit on a calibration split with real prediction errors."
         )
-    raise NotImplementedError(
-        "fit_scaling is not available yet: the scaling objective (MISSION MATH-8, decision P-04) "
-        "is under review. See docs/constitution/MISSION.md, section 9."
-    )
+    return float(np.sqrt(np.mean(residuals * residuals)))
