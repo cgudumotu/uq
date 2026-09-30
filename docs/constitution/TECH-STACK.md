@@ -146,10 +146,15 @@ computation runs (REPRO-4).
   Publishing will use PyPI Trusted Publishing from GitHub Actions, so no API token is stored (ADR
   in M2).
 
-## 9. Continuous integration (planned, M1 scaffold)
+## 9. Continuous integration
 
 GitHub Actions on every push and pull request: `ruff check`, `ruff format --check`, and the
 default pytest suite on Python 3.10–3.14, on ubuntu-latest and windows-latest.
+
+Third-party actions are pinned to exact release versions (for example `actions/checkout@v7.0.1`),
+so a new release of an action cannot change the build without a commit in this repository.
+`astral-sh/setup-uv` has published no major-version tags since v8, so an exact version is the
+only option there.
 
 ## 10. Amendment log
 
@@ -168,3 +173,8 @@ default pytest suite on Python 3.10–3.14, on ubuntu-latest and windows-latest.
 - **2026-09-30, amendment 3 (P-09).** §3: `compare.py` added to the core layout and the
   dependency diagram; it imports `report`, `metrics` and `_validate` and, like every core
   module, nothing outside NumPy and the standard library.
+- **2026-09-30, amendment 4.** §9: CI is live; actions pinned to exact versions. The first two
+  CI runs passed but warned that `actions/checkout@v4` and `astral-sh/setup-uv@v6` target
+  Node.js 20, which GitHub deprecated; they now run `actions/checkout@v7.0.1` and
+  `astral-sh/setup-uv@v9.0.0`, both on Node.js 24. No breaking change in setup-uv v7–v9 affects
+  this workflow (checked against their release notes).

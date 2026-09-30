@@ -36,6 +36,9 @@ OVERCONFIDENT: 95% promised, 65.0% delivered.
 pip install uqcalibrate
 ```
 
+Until the first release reaches PyPI, install from GitHub:
+`pip install git+https://github.com/cgudumotu/uq`.
+
 Python 3.10 or newer. The only dependency is NumPy.
 
 ## What you need
@@ -147,9 +150,9 @@ The author's master's thesis (*Uncertainty Quantification in Deep Neural Network
 computed a deep operator neural network's total standard deviation as `√std(μ) + √mean(σ²)`
 instead of `√(var(μ) + mean(σ²))`. The bands came out about 1.9× too wide, and the thesis's
 headline result (89.05% coverage of a "95%" band) followed from that error. Coverage alone could
-not catch it: wider bands always catch more points. [ERRATA.md](ERRATA.md) documents every
-affected table and the corrected numbers; the `reproduce/` folder regenerates them with one
-command.
+not catch it: wider bands always catch more points. [ERRATA.md](ERRATA.md) lists every affected
+table. It is a draft while the corrected numbers are regenerated; a `reproduce/` folder will
+rebuild them with one command.
 
 ## API
 

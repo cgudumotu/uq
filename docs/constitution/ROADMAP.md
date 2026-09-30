@@ -11,7 +11,8 @@ Every item names the MISSION rules it serves. Update this file whenever an item 
 
 M0, M1 and M2 finish before 2026-10-07. If anything slips, the PyPI upload slips first. Everything
 else, including the TestPyPI upload, is finished by 2026-10-06; 2026-10-07 is buffer. The guest
-lecture on 2026-10-12 does not depend on PyPI.
+lecture on 2026-10-12 does not depend on PyPI: the package already installs from the public
+repository with `pip install git+https://github.com/cgudumotu/uq` (checked 2026-09-30).
 
 The pace is set by review: Claude drafts, and nothing counts as done until Carol has reviewed every
 line. Each day's plan assumes the previous day's review is complete.
@@ -95,10 +96,13 @@ copies are byte-identical, so one is used), Thesis_PyPi/UQ_DNN_Thesis.pdf.
 - 📋 CHANGELOG, version 0.1.0. 10-06.
 - ✅ GitHub repository `cgudumotu/uq` created, first commit pushed (2026-09-30). The repository
   name stays `uq`; the package name is `uqcalibrate` (Carol, 2026-09-30). The Trusted Publishing
-  setup on PyPI names the repository, so the two names never need to match.
-- ✅ TestPyPI and PyPI accounts created (Carol, 2026-09-30). PyPI requires two-factor
-  authentication before any upload; the release checklist confirms it is switched on. The name
-  `uqcalibrate` had no releases on PyPI or TestPyPI on 2026-09-30.
+  setup on PyPI names the repository, so the two names never need to match. Public since
+  2026-09-30 (Carol). CI green on both pushed commits: 10 jobs each, Python 3.10–3.14 on Linux
+  and Windows.
+- ✅ TestPyPI and PyPI accounts created, two-factor authentication on in both (Carol,
+  2026-09-30). The name `uqcalibrate` had no releases on PyPI or TestPyPI on 2026-09-30.
+- 📋 Carol: register a "pending publisher" for `uqcalibrate` on TestPyPI and on PyPI (Trusted
+  Publishing; exact values come with the publish workflow). 10-04.
 - 📋 TestPyPI upload. ⏸ Carol approves. 10-06.
 - 📋 PyPI upload. ⏸ Carol approves. First item to slip. 10-07 or later.
 
@@ -144,3 +148,6 @@ ADRs live in docs/decisions/.
 - **2026-09-30, amendment 7.** P-04 and P-09 decided and built (MISSION amendment 9);
   `compare` moved from M2 to the delivered core; the critical path reworded: the package track
   waits on no decision, the erratum track on P-05 to P-08.
+- **2026-09-30, amendment 8.** Two-factor authentication confirmed on PyPI and TestPyPI; the
+  repository is public; CI green on both pushes; install from GitHub checked, so the lecture
+  needs no PyPI release. Pending-publisher registration added as Carol's 10-04 item.
