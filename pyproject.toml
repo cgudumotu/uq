@@ -7,16 +7,15 @@ name = "uqcalibrate"
 dynamic = ["version"]                       # written once, in src/uqcalibrate/__init__.py (TECH-STACK section 8)
 description = "Check whether a regression model's uncertainty is honest, and fix it when it is not."
 readme = "README.md"
-license = "MIT"
+license = "MIT"                             # SPDX expression; replaces the License :: classifier (PEP 639)
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]              # the only runtime dependency (MISSION API-5)
-# authors: pending Carol's answer on the name to print and whether to list an email (PyPI shows it).
+authors = [{ name = "Carol Gudumotu" }]      # no email: package metadata is public forever (Carol, 2026-09-30)
 keywords = ["uncertainty", "calibration", "regression", "coverage", "prediction-interval"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -29,6 +28,9 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/cgudumotu/uq"
+Source = "https://github.com/cgudumotu/uq"
+Issues = "https://github.com/cgudumotu/uq/issues"
+Changelog = "https://github.com/cgudumotu/uq/blob/main/CHANGELOG.md"
 Errata = "https://github.com/cgudumotu/uq/blob/main/ERRATA.md"
 
 # The `torch` extra (uqcalibrate.models) is added in M2 (TECH-STACK section 4).
@@ -44,7 +46,7 @@ path = "src/uqcalibrate/__init__.py"
 packages = ["src/uqcalibrate"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/uqcalibrate", "tests", "README.md", "LICENSE", "pyproject.toml"]
+include = ["src/uqcalibrate", "tests", "README.md", "LICENSE", "CHANGELOG.md", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]              # src: the docstring examples run as tests

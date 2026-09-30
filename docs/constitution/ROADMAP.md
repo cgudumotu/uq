@@ -25,8 +25,12 @@ line. Each day's plan assumes the previous day's review is complete.
 | Sat 10-03 | M1 done | Evidence manifest, provenance extraction, stripped copies; DONN port; correction ladder; ERRATA E-1 numbers for approval |
 | Sun 10-04 | M2 | Models (PyTorch extra); P-06 decided |
 | Mon 10-05 | M2 | Corrected reruns of Tables 1–34 and figures; `compare()`; `train_and_compare()` |
-| Tue 10-06 | M2 done | ERRATA complete for approval; CHANGELOG; 0.1.0 on TestPyPI (approval) |
-| Wed 10-07 | Buffer | PyPI upload (approval); first item to slip |
+| Tue 10-06 | M2 done | ERRATA complete for approval; 0.2.0 (models) on TestPyPI (approval) |
+| Wed 10-07 | Buffer | 0.2.0 PyPI upload (approval); first item to slip |
+
+**Release plan (Carol, 2026-09-30):** 0.1.0 is the NumPy core. TestPyPI dry run 09-30 or 10-01;
+the PyPI upload of 0.1.0 follows Carol's line-by-line review of the code (target 10-02). 0.2.0
+adds the PyTorch extra (the five models and `train_and_compare`).
 
 **Critical path.** The package track no longer waits on any decision: P-01 to P-04, P-09 and
 P-10 are decided. P-05, P-07 and P-08 gate the DONN reproduction (erratum track); P-06 gates the
@@ -93,7 +97,10 @@ copies are byte-identical, so one is used), Thesis_PyPi/UQ_DNN_Thesis.pdf.
   re-run for the DONN only (REPRO-3, ADR-0001). ⏸ P-06 (DATA-4) for Table 34, whose notebook is
   lost. 10-05.
 - 📋 ERRATA.md complete. ⏸ Carol approves every number and claim. 10-06.
-- 📋 CHANGELOG, version 0.1.0. 10-06.
+- ✅ 0.1.0 release preparation: CHANGELOG, author metadata, absolute README links, publish
+  workflow, docs/RELEASING.md; `twine check --strict` passes; the source distribution's own
+  tests pass in a clean environment. 2026-09-30.
+- 📋 CHANGELOG entry and version 0.2.0 for the models. 10-06.
 - ✅ GitHub repository `cgudumotu/uq` created, first commit pushed (2026-09-30). The repository
   name stays `uq`; the package name is `uqcalibrate` (Carol, 2026-09-30). The Trusted Publishing
   setup on PyPI names the repository, so the two names never need to match. Public since
@@ -101,10 +108,11 @@ copies are byte-identical, so one is used), Thesis_PyPi/UQ_DNN_Thesis.pdf.
   and Windows.
 - ✅ TestPyPI and PyPI accounts created, two-factor authentication on in both (Carol,
   2026-09-30). The name `uqcalibrate` had no releases on PyPI or TestPyPI on 2026-09-30.
-- 📋 Carol: register a "pending publisher" for `uqcalibrate` on TestPyPI and on PyPI (Trusted
-  Publishing; exact values come with the publish workflow). 10-04.
-- 📋 TestPyPI upload. ⏸ Carol approves. 10-06.
-- 📋 PyPI upload. ⏸ Carol approves. First item to slip. 10-07 or later.
+- 📋 Carol: pending publishers on TestPyPI and PyPI, and the `testpypi` and `pypi` GitHub
+  environments with her as required reviewer (docs/RELEASING.md, part 1). 09-30.
+- 📋 0.1.0 on TestPyPI. ⏸ Carol approves in GitHub. 09-30 or 10-01.
+- 📋 0.1.0 on PyPI, after Carol's line-by-line review. ⏸ Carol approves in GitHub. 10-02.
+- 📋 0.2.0 on TestPyPI, then PyPI. ⏸ Carol approves each. 10-06 and 10-07; first item to slip.
 
 ## Parking lot (not scheduled)
 
@@ -151,3 +159,7 @@ ADRs live in docs/decisions/.
 - **2026-09-30, amendment 8.** Two-factor authentication confirmed on PyPI and TestPyPI; the
   repository is public; CI green on both pushes; install from GitHub checked, so the lecture
   needs no PyPI release. Pending-publisher registration added as Carol's 10-04 item.
+- **2026-09-30, amendment 9.** Carol's release decisions: 0.1.0 is the NumPy core, released now;
+  the models ship as 0.2.0; the PyPI upload of 0.1.0 waits for her line-by-line review; the
+  PyPI author is "Carol Gudumotu" with no email. Release preparation done the same day; the
+  pending publishers and GitHub environments moved to 09-30.

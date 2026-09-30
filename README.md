@@ -150,7 +150,7 @@ The author's master's thesis (*Uncertainty Quantification in Deep Neural Network
 computed a deep operator neural network's total standard deviation as `√std(μ) + √mean(σ²)`
 instead of `√(var(μ) + mean(σ²))`. The bands came out about 1.9× too wide, and the thesis's
 headline result (89.05% coverage of a "95%" band) followed from that error. Coverage alone could
-not catch it: wider bands always catch more points. [ERRATA.md](ERRATA.md) lists every affected
+not catch it: wider bands always catch more points. [ERRATA.md](https://github.com/cgudumotu/uq/blob/main/ERRATA.md) lists every affected
 table. It is a draft while the corrected numbers are regenerated; a `reproduce/` folder will
 rebuild them with one command.
 
@@ -166,13 +166,13 @@ rebuild them with one command.
 | `gaussian_nll(y, mean, std)` | `float` | MATH-5 |
 | `interval_score(y, mean, std, level=0.95)` | `float` | MATH-6 |
 
-Every rule is written out in [docs/constitution/MISSION.md](docs/constitution/MISSION.md), and
+Every rule is written out in [docs/constitution/MISSION.md](https://github.com/cgudumotu/uq/blob/main/docs/constitution/MISSION.md), and
 every rule has a test that names it.
 
-Coming in the next release: `uqcalibrate[torch]`, with the five neural-network architectures from
-the thesis and `train_and_compare(X, y)`, which trains them, calibrates each on a held-out split
+Coming in 0.2.0: `uqcalibrate[torch]`, with the five neural-network architectures from the
+thesis and `train_and_compare(X, y)`, which trains them, calibrates each on a held-out split
 and hands the results to `compare`.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/cgudumotu/uq/blob/main/LICENSE).

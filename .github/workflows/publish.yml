@@ -1,0 +1,76 @@
+# Publish uqcalibrate to TestPyPI and PyPI with Trusted Publishing (TECH-STACK section 8).
+# No API token is stored anywhere: PyPI trusts this workflow file in this repository.
+#
+#   Actions tab > publish > Run workflow    build, then upload to TestPyPI only
+#   Publish a GitHub Release (tag v0.1.0)   build, then TestPyPI, then PyPI
+#
+# Every upload waits for Carol's approval: the testpypi and pypi environments have her as a
+# required reviewer (docs/RELEASING.md). Actions are pinned to full commit IDs; the comment on
+# each line names the release.
+name: publish
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9  # v9.0.0
+      - run: uv build
+      - name: Release tag must match the package version
+        if: github.event_name == 'release'
+        run: |
+          wheel="dist/uqcalibrate-${GITHUB_REF_NAME#v}-py3-none-any.whl"
+          test -f "$wheel" || {
+            echo "Tag $GITHUB_REF_NAME does not match __version__ in src/uqcalibrate/__init__.py"
+            ls dist
+            exit 1
+          }
+      - run: uvx twine check --strict dist/*
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: dist
+          path: dist/
+
+  testpypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/uqcalibrate
+    permissions:
+      id-token: write  # lets PyPI verify that this workflow is the trusted publisher
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true  # a release re-runs this job after a manual TestPyPI run
+
+  pypi:
+    needs: testpypi
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/uqcalibrate
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
